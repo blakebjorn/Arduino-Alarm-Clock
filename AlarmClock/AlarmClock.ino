@@ -7,7 +7,7 @@
 #include <SPI.h>
 #include <TimeLib.h>
 
-LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);             // Number of lines and i2c address of the display
+LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); // Number of lines and i2c address of the display
 DS1302 rtc(5, 6, 7);
 
 const int button0Pin = 2;   
@@ -56,13 +56,22 @@ void beep(unsigned char delayms){
 }  
 
 void displayDateTimeCallback(){
+//   // Send Day-of-Week
+//  Serial.print(rtc.getDOWStr());
+//  Serial.print(" ");
+//  // Send date
+//  Serial.print(rtc.getDateStr());
+//  Serial.print(" -- ");
+//  // Send time
+//  Serial.println(rtc.getTimeStr());
+  
   lcd.setCursor(0,0);
   lcd.print(rtc.getTimeStr(FORMAT_LONG));
   String d_o_w = rtc.getDOWStr();
   String month = rtc.getMonthStr();
   String dateRead = rtc.getDateStr(FORMAT_LITTLEENDIAN);
   String day = dateRead.substring(0,2);
-  String dateDraw = d_o_w + " " + month + " " + day;
+  String dateDraw = d_o_w.substring(0,3) + " " + month.substring(0,3) + " " + day;
   lcd.setCursor(0,1);
   lcd.print(dateDraw);  
   lcd.print(" "+alarmStringShort);
@@ -94,6 +103,7 @@ void updateAlarmString(){
 Task displayDateTime(1000, TASK_FOREVER, &displayDateTimeCallback);
 Task displayMenu(1000, TASK_FOREVER, &openMenu);
 Task startAlarm(1000, TASK_FOREVER, &buzzer);
+
 void openMenu(){
   currentMenuDialog = 0;
   lcd.backlight();
@@ -166,35 +176,22 @@ void armAlarmClock(){
     lcd.setCursor(0,0);
     delayDeltaMS = (delayDeltaMS*60-currentTime.sec)*1000;
     startAlarm.enableDelayed(delayDeltaMS);
-    delay(1500); //Time until next alarm stays on screen for 3 seconds after being set
+    delay(1500); //Time until next alarm stays on screen for 1.5 seconds after being set
 }
-
-//void reArmAlarmClock(){
-//    alarmDelta = alarmTime.hour*60 + alarmTime.min;
-//    currentDelta = currentTime.hour*60 + currentTime.min;
-//    if (alarmDelta>currentDelta){delayDeltaMS = alarmDelta-currentDelta;}
-//    else {delayDeltaMS = 1440 - (currentDelta-alarmDelta);}
-//    lcd.clear();
-//    lcd.print("Rearming");
-//    delayDeltaMS = 15000; //(delayDeltaMS*60-currentTime.sec)*1000;
-//    delay(3000);
-//    startAlarm.restartDelayed(delayDeltaMS);
-//}
 
 Scheduler mainLoop;
 
 void setup()   {
-  //// INITIALIZE UP RTC - RUN ONCE ///
-  //rtc.setTCR(TCR_OFF);
-  //rtc.halt(false);
-  //rtc.writeProtect(true);
-  //rtc.setDOW(TUESDAY);        // Set Day-of-Week to FRIDAY
-  //rtc.setTime(17, 41, 0);     // Set the time to 12:00:00 (24hr format)
-  //rtc.setDate(15, 12, 2015);   // Set the date to August 6th, 2010
-  //rtc.writeProtect(false);
-  //rtc.setDOW(TUESDAY);        // Set Day-of-Week to FRIDAY
-  //rtc.setTime(17, 41, 0);     // Set the time to 12:00:00 (24hr format)
-  //rtc.setDate(15, 12, 2015);   // Set the date to August 6th, 2010  
+//// INITIALIZE RTC - RUN ONCE ///
+//  Serial.begin(9600);
+//  rtc.halt(false);
+//  rtc.setTCR(TCR_D1R2K);
+//  rtc.writeProtect(false);
+//  rtc.setDOW(SATURDAY);        // Set Day-of-Week to FRIDAY
+//  rtc.setDate(9, 1, 2016);   // Set the date to August 6th, 2010
+//  rtc.setTime(14, 42, 0);     // Set the time to 12:00:00 (24hr format)
+
+  //rtc.setTCR(TCR_OFF); Optionally disable battery trickle charge
   
   pinMode(9, OUTPUT);
   pinMode(button0Pin, INPUT_PULLUP);
@@ -224,10 +221,8 @@ void setup()   {
 
 
 void loop() {
-//   Display time centered on the upper line
-
   mainLoop.execute();
-  displayMenu.disable();
+  displayMenu.disable();  
   
   button0State = digitalRead(button0Pin);
   button1State = digitalRead(button1Pin);
@@ -235,14 +230,12 @@ void loop() {
   
   if (button0State == LOW) {
     beep(50);
-    displayMenu.enable();
-  }
+    displayMenu.enable();  }
   
   if (button1State == LOW) {
     lcd.backlight();
   } else {
-    lcd.noBacklight();
-  }
+    lcd.noBacklight();  }
 
   if (button2State == LOW) {
     beep(150);
@@ -252,22 +245,5 @@ void loop() {
       alarmStringShort = "     ";
     } else {
       alarmEnabled=true;
-      armAlarmClock();
-    }
-  } 
+      armAlarmClock();  }  } 
 }
-  
-
-// Draw date in format "Fri Dec 11" in the lower left corner
-//void drawDateOnLCD(){                   
-//  String dow = rtc.getDOWStr();
-//  String month = rtc.getMonthStr();
-//  String date = rtc.getDateStr(FORMAT_LITTLEENDIAN);
-//  String day = date.substring(0,2);
-//  String drawing = dow + " " + month + " " + day;
-//  lcd.setCursor(0,1);
-//  lcd.print(drawing);
-//}
-
-
-
