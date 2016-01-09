@@ -9,3 +9,10 @@ Requires:
 - 4) Piezo Buzzer
 - 5) 3x Push Buttons
 
+Usage:
+- Use Set_DS1302 to set the proper time and date
+- Upload main alarm sketch
+- Button 1 enters the set alarm page. Button 2 increases hour, button 3 increases minute, pressing button 1 again saves changes and arms  the alarm
+- Button 2 turns on the backlight (hold to keep on)
+- Button 3 enables/disables the alarm
+- When the alarm triggers it will emit 3 beeps at 10 second intervals, afterwards it will beep continually until slept for 60 seconds (button 1) or an RFID emitting device is brought within readable distance.
