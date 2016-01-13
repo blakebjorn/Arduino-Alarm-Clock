@@ -45,6 +45,10 @@ long alarmDelta = 0;
 long currentDelta = 0;
 long delayDeltaMS = 0;
 
+bool backlightEnabled=false;
+
+String currentTimeString = "";
+
 Time alarmTime;
 Time currentTime;
 
@@ -54,6 +58,7 @@ void beep(unsigned char delayms){
   analogWrite(buzzerPin, 0);       // 0 turns it off
   delay(delayms);          // wait for a delayms ms   
 }  
+
 
 void displayDateTimeCallback(){
 //   // Send Day-of-Week
@@ -66,7 +71,12 @@ void displayDateTimeCallback(){
 //  Serial.println(rtc.getTimeStr());
   
   lcd.setCursor(0,0);
-  lcd.print(rtc.getTimeStr(FORMAT_LONG));
+  currentTimeString = rtc.getTimeStr(FORMAT_LONG);
+  if (currentTimeString.substring(0,2).toInt()>12){
+    currentTimeString.substring(0,2) = String(currentTimeString.substring(0,2).toInt()-12);
+  }
+  
+  lcd.print(currentTimeString);
   String d_o_w = rtc.getDOWStr();
   String month = rtc.getMonthStr();
   String dateRead = rtc.getDateStr(FORMAT_LITTLEENDIAN);
@@ -185,13 +195,16 @@ void setup()   {
 //// INITIALIZE RTC - RUN ONCE ///
 //  Serial.begin(9600);
 //  rtc.halt(false);
-//  rtc.setTCR(TCR_D1R2K);
+//  rtc.setTCR(TCR_OFF); //D1R2K);
+
 //  rtc.writeProtect(false);
 //  rtc.setDOW(SATURDAY);        // Set Day-of-Week to FRIDAY
-//  rtc.setDate(9, 1, 2016);   // Set the date to August 6th, 2010
-//  rtc.setTime(14, 42, 0);     // Set the time to 12:00:00 (24hr format)
+//  rtc.setDate(11, 1, 2016);   // Set the date to August 6th, 2010
+//  rtc.setTime(23, 21, 00);     // Set the time to 12:00:00 (24hr format)
 
-  //rtc.setTCR(TCR_OFF); Optionally disable battery trickle charge
+
+//  rtc.writeProtect(true);
+//  rtc.setTCR(TCR_OFF); Optionally disable battery trickle charge
   
   pinMode(9, OUTPUT);
   pinMode(button0Pin, INPUT_PULLUP);
@@ -202,7 +215,7 @@ void setup()   {
   beep(50);
   delay(250);
   lcd.begin(16,2);   // initialize the lcd for 16 chars 2 lines, turn on backlight
-  lcd.noBacklight();
+//  lcd.noBacklight();
 
   // start the SPI library:
   SPI.begin();  
@@ -233,9 +246,16 @@ void loop() {
     displayMenu.enable();  }
   
   if (button1State == LOW) {
-    lcd.backlight();
-  } else {
-    lcd.noBacklight();  }
+    if (backlightEnabled == true){
+      lcd.noBacklight();
+      backlightEnabled = false;
+      delay(500);
+    } else {
+      lcd.backlight();
+      backlightEnabled = true;
+      delay(500);
+    }
+  }
 
   if (button2State == LOW) {
     beep(150);
